@@ -63,10 +63,10 @@ class SettingsDialog:
             json.dump(self.settings, f)
         self.dialog.destroy()
 
-class VoiceTyperApp:
+class WhisperTypingApp:
     def __init__(self):
         self.root = ctk.CTk()
-        self.root.title("Voice Typer Pro")
+        self.root.title("WhisperTyping")
         self.root.geometry("400x250")
         self.root.minsize(400, 250)
         
@@ -135,9 +135,7 @@ class VoiceTyperApp:
         def save_and_retry():
             new_key = api_entry.get()
             try:
-                # Try to initialize Groq with new key
                 self.groq_client = Groq(api_key=new_key)
-                # If successful, save the new key
                 self.settings['api_key'] = new_key
                 with open('settings.json', 'w') as f:
                     json.dump(self.settings, f)
@@ -198,7 +196,7 @@ class VoiceTyperApp:
         # Title
         self.title_label = ctk.CTkLabel(
             self.header_frame,
-            text="Voice Typer Pro",
+            text="WhisperTyping",
             font=ctk.CTkFont(size=20, weight="bold")
         )
         self.title_label.pack(side="left", padx=10)
@@ -492,5 +490,5 @@ class VoiceTyperApp:
         self.root.mainloop()
 
 if __name__ == "__main__":
-    app = VoiceTyperApp()
+    app = WhisperTypingApp()
     app.run() 
