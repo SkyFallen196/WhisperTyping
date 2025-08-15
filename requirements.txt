@@ -2,7 +2,7 @@ pynput
 pyaudio
 wave
 playsound==1.2.2
-deepgram-sdk==2.12.0
+groq
 python-dotenv
 customtkinter
 pillow

@@ -8,13 +8,10 @@ import wave
 import os
 from playsound import playsound
 from datetime import datetime
-from deepgram import Deepgram
-from dotenv import load_dotenv
+from groq import Groq
 from PIL import Image
-import asyncio
 import pystray
 import json
-from deepgram.errors import DeepgramSetupError
 
 # Set theme and color scheme
 ctk.set_appearance_mode("dark")
@@ -37,8 +34,8 @@ class SettingsDialog:
         self.api_frame.pack(fill="x", padx=20, pady=20)
         
         self.api_label = ctk.CTkLabel(
-            self.api_frame, 
-            text="Deepgram API Key:",
+            self.api_frame,
+            text="Groq API Key:",
             font=ctk.CTkFont(size=14)
         )
         self.api_label.pack(anchor="w", pady=5)
@@ -80,16 +77,13 @@ class VoiceTyperApp:
         self.pykeyboard = keyboard.Controller()
         self.recording_animation_active = False
         
-        # Try to load settings and initialize Deepgram
+        # Try to load settings and initialize Groq
         try:
             self.load_settings()
-        except DeepgramSetupError:
-            # Show settings dialog immediately if API key is invalid
+        except Exception:
+            # Show settings dialog immediately if API key is missing or invalid
             self.setup_ui()  # Setup UI first
             self.show_api_key_error()
-        except Exception as e:
-            self.setup_ui()
-            self.show_error(f"Error: {str(e)}")
             
         # Initialize system tray
         self.setup_system_tray()
@@ -123,7 +117,7 @@ class VoiceTyperApp:
         # Error message
         message = ctk.CTkLabel(
             error_dialog,
-            text="Invalid Deepgram API Key detected.\nPlease enter a valid API key to continue.",
+            text="Invalid Groq API Key detected.\nPlease enter a valid API key to continue.",
             font=ctk.CTkFont(size=14),
             wraplength=350
         )
@@ -141,15 +135,15 @@ class VoiceTyperApp:
         def save_and_retry():
             new_key = api_entry.get()
             try:
-                # Try to initialize Deepgram with new key
-                self.deepgram = Deepgram(new_key)
+                # Try to initialize Groq with new key
+                self.groq_client = Groq(api_key=new_key)
                 # If successful, save the new key
                 self.settings['api_key'] = new_key
                 with open('settings.json', 'w') as f:
                     json.dump(self.settings, f)
                 error_dialog.destroy()
                 self.status_label.configure(text="API Key updated successfully!")
-            except DeepgramSetupError:
+            except Exception:
                 message.configure(text="Invalid API Key. Please try again.", text_color="red")
         
         # Save button
@@ -173,13 +167,12 @@ class VoiceTyperApp:
                 self.settings = json.load(f)
         except FileNotFoundError:
             self.settings = {'api_key': ''}
-            
-        try:
-            self.deepgram = Deepgram(self.settings['api_key'])
-        except DeepgramSetupError:
-            raise
-        except Exception as e:
-            raise Exception(f"Failed to initialize Deepgram: {str(e)}")
+
+        api_key = self.settings.get('api_key', '')
+        if not api_key:
+            raise Exception("API key not set")
+
+        self.groq_client = Groq(api_key=api_key)
         
     def setup_system_tray(self):
         # Create system tray icon
@@ -301,7 +294,7 @@ class VoiceTyperApp:
                 self.record_button.configure(fg_color="#c93434")
     
     def toggle_recording(self):
-        if not hasattr(self, 'deepgram'):
+        if not hasattr(self, 'groq_client'):
             self.show_api_key_error()
             return
             
@@ -379,16 +372,13 @@ class VoiceTyperApp:
         
         self.status_label.configure(text="Processing transcription...")
         
-    async def transcribe_audio(self, audio_file):
+    def transcribe_audio(self, audio_file):
         with open(audio_file, 'rb') as audio:
-            source = {'buffer': audio, 'mimetype': 'audio/wav'}
-            options = {
-                'punctuate': True,
-                'language': 'en',
-                'model': 'general',
-            }
-            response = await self.deepgram.transcription.prerecorded(source, options)
-            return response['results']['channels'][0]['alternatives'][0]['transcript']
+            transcription = self.groq_client.audio.transcriptions.create(
+                model="whisper-large-v3",
+                file=audio
+            )
+            return transcription.text
             
     def start_transcription_thread(self):
         threading.Thread(target=self.transcribe_speech).start()
@@ -402,7 +392,7 @@ class VoiceTyperApp:
                 
             audio_file = f"test{i}.wav"
             try:
-                transcript = asyncio.run(self.transcribe_audio(audio_file))
+                transcript = self.transcribe_audio(audio_file)
                 
                 # Update GUI
                 self.transcription_text.insert('1.0', f"{datetime.now().strftime('%H:%M:%S')}: {transcript}\n\n")
