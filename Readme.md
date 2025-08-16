@@ -4,15 +4,15 @@
 
 **WhisperTyping** is my personal fork of **VoiceTyper Pro**.
 
-A minimalist GUI app for real-time speech-to-text via the **Groq API** that **types wherever your cursor is**. For Windows, a portable `.exe` is available—just double-click to run.
+A minimalist GUI app for real-time speech-to-text via the **Groq API** that **types wherever your cursor is**. For Windows, a portable `.exe` is available - just double-click to run.
 
-> From the fork author: this matters to me because of **spasticity**—long typing sessions are hard. The goal is to minimize key presses and make voice input truly convenient.
+> From the author of the fork: this is important to me because of problems with spasticity in my hands -  typing for long periods of time is difficult for me. The goal is to speed up interaction with the PC and make voice input truly convenient.
 
 ---
 
 ## Why this fork
 
-* Portable **Windows `.exe`** — runs with no installation and no external deps
+* Portable **Windows `.exe`** - runs with no installation and no external deps
 * Backend switch: **Deepgram → Groq API**
 * Ongoing small improvements for daily use
 
