@@ -1,2 +1,5 @@
 settings.json
 transcribe.log
+*spec
+build/
+dist/
