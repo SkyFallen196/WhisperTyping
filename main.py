@@ -216,7 +216,7 @@ class WhisperTypingApp:
         
         self.record_button = ctk.CTkButton(
             self.control_frame,
-            text="Start Recording (F2)",
+            text="Start Recording (Insert)",
             command=self.toggle_recording,
             height=40,
             corner_radius=20
@@ -302,7 +302,7 @@ class WhisperTypingApp:
             self.recording_animation_active = True
             self.record_button.configure(
                 fg_color="#c93434",
-                text="■ Stop Recording (F2)"  # Square stop symbol
+                text="■ Stop Recording (Insert)"  # Square stop symbol
             )
             self.animate_recording()
         else:
@@ -311,13 +311,13 @@ class WhisperTypingApp:
             self.recording_animation_active = False
             self.record_button.configure(
                 fg_color=["#3B8ED0", "#1F6AA5"],
-                text="● Start Recording (F2)"  # Circle record symbol
+                text="● Start Recording (Insert)"  # Circle record symbol
             )
             self.recording_indicator.set(0)
     
     def on_key_press(self, key):
         try:
-            if key == keyboard.Key.f2:
+            if key == keyboard.Key.insert:
                 self.root.after(0, self.toggle_recording)
         except AttributeError:
             pass
