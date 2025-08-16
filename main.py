@@ -17,7 +17,7 @@ from pathlib import Path
 
 # Function to get the path for accessing files
 def resource_path(rel):
-    base = getattr(sys, "_MEIPASS", Path(__file__).parent)
+    base = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
     return base / rel
 
 # Set theme and color scheme
