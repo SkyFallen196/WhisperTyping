@@ -6,7 +6,7 @@
 
 A minimalist GUI app for real-time speech-to-text via the **Groq API** that **types wherever your cursor is**. For Windows, a portable `.exe` is available - just double-click to run.
 
-> From the author of the fork: this is important to me because of problems with spasticity in my hands -  typing for long periods of time is difficult for me. The goal is to speed up interaction with the PC and make voice input truly convenient.
+> From the author of the fork: this is important to me because of problems with spasticity in my hands - typing for long periods of time is difficult for me. The goal is to speed up interaction with the PC and make voice input truly convenient.
 
 ---
 
@@ -77,7 +77,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-3. Provide your **Groq API key** in the app — and you’re set.
+3. Provide your **Groq API key** in the app - and you’re set.
 
 ---
 
