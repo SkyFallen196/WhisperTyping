@@ -12,6 +12,13 @@ from groq import Groq
 from PIL import Image
 import pystray
 import json
+import sys
+from pathlib import Path
+
+# Function to get the path for accessing files
+def resource_path(rel):
+    base = getattr(sys, "_MEIPASS", Path(__file__).parent)
+    return base / rel
 
 # Set theme and color scheme
 ctk.set_appearance_mode("dark")
@@ -26,7 +33,7 @@ class SettingsDialog:
         self.dialog.resizable(False, False)
         
         # Load current API key
-        with open('settings.json', 'r') as f:
+        with open(resource_path('settings.json'), 'r') as f:
             self.settings = json.load(f)
         
         # API Key input
@@ -59,7 +66,7 @@ class SettingsDialog:
         
     def save_settings(self):
         self.settings['api_key'] = self.api_entry.get()
-        with open('settings.json', 'w') as f:
+        with open(resource_path('settings.json'), 'w') as f:
             json.dump(self.settings, f)
         self.dialog.destroy()
 
@@ -137,7 +144,7 @@ class WhisperTypingApp:
             try:
                 self.groq_client = Groq(api_key=new_key)
                 self.settings['api_key'] = new_key
-                with open('settings.json', 'w') as f:
+                with open(resource_path('settings.json'), 'w') as f:
                     json.dump(self.settings, f)
                 error_dialog.destroy()
                 self.status_label.configure(text="API Key updated successfully!")
@@ -161,7 +168,7 @@ class WhisperTypingApp:
         
     def load_settings(self):
         try:
-            with open('settings.json', 'r') as f:
+            with open(resource_path('settings.json'), 'r') as f:
                 self.settings = json.load(f)
         except FileNotFoundError:
             self.settings = {'api_key': ''}
@@ -173,8 +180,12 @@ class WhisperTypingApp:
         self.groq_client = Groq(api_key=api_key)
         
     def setup_system_tray(self):
-        # Create system tray icon
-        self.icon_image = Image.new('RGB', (64, 64), color='blue')
+        # Load icon image
+        icon_path = resource_path("assets/app_icon.ico")
+        if Path(icon_path).exists():
+            self.icon_image = Image.open(icon_path)
+        else:
+            self.icon_image = Image.new('RGB', (64, 64), color='blue')
         self.tray_icon = pystray.Icon(
             "Voice Typer",
             self.icon_image,
@@ -345,7 +356,7 @@ class WhisperTypingApp:
         )
         
         frames = []
-        playsound("assets/on.wav")
+        playsound(str(resource_path("assets/on.wav")))
         
         while not self.stop_recording:
             data = stream.read(chunk)
@@ -354,7 +365,7 @@ class WhisperTypingApp:
         stream.stop_stream()
         stream.close()
         p.terminate()
-        playsound("assets/off.wav")
+        playsound(str(resource_path("assets/off.wav")))
         
         # Save recording
         wf = wave.open(f"test{self.file_ready_counter+1}.wav", 'wb')
@@ -397,7 +408,7 @@ class WhisperTypingApp:
                 self.status_label.configure(text="Ready to record...")
                 
                 # Log transcription
-                with codecs.open('transcribe.log', 'a', encoding='utf-8') as f:
+                with codecs.open(resource_path('transcribe.log'), 'a', encoding='utf-8') as f:
                     f.write(f"{datetime.now()}: {transcript}\n")
                     
                 # Type the text
@@ -466,7 +477,7 @@ class WhisperTypingApp:
     def clear_logs(self):
         self.transcription_text.delete('1.0', 'end')
         # Also clear the log file
-        with open('transcribe.log', 'w', encoding='utf-8') as f:
+        with open(resource_path('transcribe.log'), 'w', encoding='utf-8') as f:
             f.write('')
             
     def minimize_to_tray(self):
@@ -491,4 +502,4 @@ class WhisperTypingApp:
 
 if __name__ == "__main__":
     app = WhisperTypingApp()
-    app.run() 
+    app.run()
