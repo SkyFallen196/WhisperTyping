@@ -13,7 +13,10 @@ from PIL import Image
 import pystray
 import json
 import sys
+import ctypes
 from pathlib import Path
+import platform
+import pyperclip
 
 # Function to get the path for accessing files
 def resource_path(rel):
@@ -366,6 +369,7 @@ class WhisperTypingApp:
         stream.close()
         p.terminate()
         playsound(str(resource_path("assets/off.wav")))
+        time.sleep(0.1)  # Add pause after off.wav sound for stability
         
         # Save recording
         wf = wave.open(f"test{self.file_ready_counter+1}.wav", 'wb')
@@ -411,14 +415,10 @@ class WhisperTypingApp:
                 with codecs.open(resource_path('transcribe.log'), 'a', encoding='utf-8') as f:
                     f.write(f"{datetime.now()}: {transcript}\n")
                     
-                # Type the text
-                for element in transcript:
-                    try:
-                        self.pykeyboard.type(element)
-                        time.sleep(0.0025)
-                    except:
-                        print("empty or unknown symbol")
-                        
+                # Type the text - call through GUI thread
+                self.root.after(0, lambda t=transcript: self.type_unicode_text(t))
+                
+                time.sleep(0.1)  # Pause after sound and before file deletion
                 os.remove(audio_file)
                 i += 1
                 
@@ -499,6 +499,67 @@ class WhisperTypingApp:
 
     def run(self):
         self.root.mainloop()
+
+    def paste_hotkey(self) -> bool:
+        system = platform.system()
+        try:
+            if system == "Windows":
+                # Reliable implementation using WinAPI
+                user32 = ctypes.windll.user32
+                VK_CONTROL = 0x11
+                VK_V = 0x56
+                KEYEVENTF_KEYUP = 0x0002
+
+                user32.keybd_event(VK_CONTROL, 0, 0, 0)
+                time.sleep(0.01)
+                user32.keybd_event(VK_V, 0, 0, 0)
+                time.sleep(0.01)
+                user32.keybd_event(VK_V, 0, KEYEVENTF_KEYUP, 0)
+                user32.keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, 0)
+                return True
+
+            elif system == "Darwin":
+                # For macOS - in development (requires Accessibility permissions)
+                # TODO: Implement AppleScript version for macOS
+                pass
+            else:
+                # Linux - in development
+                # TODO: Implement Linux version with xdotool
+                pass
+        except Exception:
+            pass
+
+        # Fallback - pynput with delays
+        try:
+            ctrl_key = keyboard.Key.cmd if system == "Darwin" else keyboard.Key.ctrl
+            self.pykeyboard.press(ctrl_key)
+            time.sleep(0.02)
+            self.pykeyboard.press('v')
+            time.sleep(0.02)
+            self.pykeyboard.release('v')
+            time.sleep(0.01)
+            self.pykeyboard.release(ctrl_key)
+            return True
+        except Exception:
+            return False
+
+    def type_unicode_text(self, text: str):
+        # Copy to clipboard
+        try:
+            old_clip = pyperclip.paste()
+        except Exception:
+            old_clip = None
+
+        pyperclip.copy(text)
+        time.sleep(0.05)
+        self.paste_hotkey()
+
+        time.sleep(0.03)
+        if old_clip is not None:
+            try:
+                pyperclip.copy(old_clip)
+            except Exception:
+                pass
 
 if __name__ == "__main__":
     app = WhisperTypingApp()
