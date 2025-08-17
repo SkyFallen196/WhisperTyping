@@ -14,6 +14,8 @@ import pystray
 import json
 import sys
 from pathlib import Path
+import platform
+import pyperclip
 
 # Function to get the path for accessing files
 def resource_path(rel):
@@ -412,13 +414,8 @@ class WhisperTypingApp:
                     f.write(f"{datetime.now()}: {transcript}\n")
                     
                 # Type the text
-                for element in transcript:
-                    try:
-                        self.pykeyboard.type(element)
-                        time.sleep(0.0025)
-                    except:
-                        print("empty or unknown symbol")
-                        
+                self.type_unicode_text(transcript)
+                
                 os.remove(audio_file)
                 i += 1
                 
@@ -499,6 +496,28 @@ class WhisperTypingApp:
 
     def run(self):
         self.root.mainloop()
+
+    def type_unicode_text(self, text: str):
+        try:
+            old_clip = pyperclip.paste()
+        except Exception:
+            old_clip = None
+
+        pyperclip.copy(text)
+
+        with self.pykeyboard.pressed(
+            keyboard.Key.cmd if platform.system() == "Darwin" else keyboard.Key.ctrl
+        ):
+            self.pykeyboard.press('v')
+            self.pykeyboard.release('v')
+
+        time.sleep(0.03)
+
+        if old_clip is not None:
+            try:
+                pyperclip.copy(old_clip)
+            except Exception:
+                pass
 
 if __name__ == "__main__":
     app = WhisperTypingApp()

@@ -6,3 +6,4 @@ python-dotenv
 customtkinter
 pillow
 pystray
+pyperclip
